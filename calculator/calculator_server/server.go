@@ -6,19 +6,19 @@ import (
 	"net"
 
 	"github.com/labstack/gommon/log"
-	"github.com/sovernut/grpc_course/greet/greetpb"
+	"github.com/sovernut/grpc_course/calculator/calculatorpb"
 	"google.golang.org/grpc"
 )
 
 type server struct{}
 
-func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
-	fmt.Printf("Greet function was invoked with %v", req)
-	firstName := req.GetGreeting().GetFirstName()
-	lastName := req.GetGreeting().GetLastName()
+func (*server) Sum(ctx context.Context, req *calculatorpb.CalcRequest) (*calculatorpb.CalcResponse, error) {
+	fmt.Printf("Sum function was invoked with %v", req)
+	first := req.GetSum().GetFirst()
+	second := req.GetSum().GetSecond()
 
-	result := "Hello " + firstName + lastName
-	res := &greetpb.GreetResponse{
+	result := first + second
+	res := &calculatorpb.CalcResponse{
 		Result: result,
 	}
 	return res, nil
@@ -33,7 +33,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	greetpb.RegisterGreetServiceServer(s, &server{})
+	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
 
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve %v", err)

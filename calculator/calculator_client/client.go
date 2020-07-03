@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/labstack/gommon/log"
-	"github.com/sovernut/grpc_course/greet/greetpb"
+	"github.com/sovernut/grpc_course/calculator/calculatorpb"
 	"google.golang.org/grpc"
 )
 
@@ -17,24 +17,24 @@ func main() {
 		log.Fatalf("could not connect: %v", err)
 	}
 	defer cc.Close()
-	c := greetpb.NewGreetServiceClient(cc)
+	c := calculatorpb.NewCalculatorServiceClient(cc)
 	doUnary(c)
 }
 
-func doUnary(c greetpb.GreetServiceClient) {
+func doUnary(c calculatorpb.CalculatorServiceClient) {
 	fmt.Println("Created client: %f", c)
 
-	req := &greetpb.GreetRequest{
-		Greeting: &greetpb.Greeting{
-			FirstName: "John",
-			LastName:  "Doe",
+	req := &calculatorpb.CalcRequest{
+		Sum: &calculatorpb.Sum{
+			First:  7,
+			Second: 3,
 		},
 	}
-	res, err := c.Greet(context.Background(), req)
+	res, err := c.Sum(context.Background(), req)
 
 	if err != nil {
 		log.Fatalf("Greet response: %v", err)
 	}
 
-	log.Printf("Response from Greet %v", res.Result)
+	log.Printf("Response from Calculator %v", res.Result)
 }
