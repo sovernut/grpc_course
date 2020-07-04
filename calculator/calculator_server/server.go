@@ -24,6 +24,25 @@ func (*server) Sum(ctx context.Context, req *calculatorpb.CalcRequest) (*calcula
 	return res, nil
 }
 
+func (*server) FindPrime(req *calculatorpb.PrimeRequest, stream calculatorpb.CalculatorService_FindPrimeServer) error {
+	fmt.Printf("FindPrime function was invoked with %v", req)
+	number := req.GetNumber()
+	var k int64 = 2
+	N := number
+	for N > 1 {
+		if N%k == 0 { // if k evenly divides into N
+			res := &calculatorpb.CalcResponse{
+				Result: int64(k),
+			}
+			stream.Send(res)
+			N = N / k // divide N by k so that we have the rest of the number left.
+		} else {
+			k = k + 1
+		}
+	}
+	return nil
+}
+
 func main() {
 	fmt.Println("hello")
 
