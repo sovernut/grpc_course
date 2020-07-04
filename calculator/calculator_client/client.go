@@ -21,7 +21,8 @@ func main() {
 	c := calculatorpb.NewCalculatorServiceClient(cc)
 	// doUnary(c)
 	// doStreaming(c)
-	doClientStreaming(c)
+	// doClientStreaming(c)
+	doBiStreaming(c)
 }
 
 func doUnary(c calculatorpb.CalculatorServiceClient) {
@@ -95,5 +96,60 @@ func doClientStreaming(c calculatorpb.CalculatorServiceClient) {
 		log.Fatalf("error receving response from FindAvg : %v", err)
 	}
 	log.Printf("Find Avg Response : %v", res.GetResult())
+
+}
+
+func doBiStreaming(c calculatorpb.CalculatorServiceClient) {
+	requests := []*calculatorpb.MaxRequest{
+		{Num: 1},
+		{Num: 10},
+		{Num: 15},
+		{Num: 4},
+		{Num: 5},
+		{Num: 20},
+		{Num: 7},
+		{Num: 8},
+		{Num: 9},
+		{Num: 10},
+	}
+
+	stream, err := c.FindMax(context.Background())
+	if err != nil {
+		log.Fatalf("error calling findmax : %v", err)
+	}
+	waitc := make(chan int)
+
+	// use goroutine to send each request
+	go func() {
+		for _, req := range requests {
+			if err := stream.Send(req); err != nil {
+				log.Fatalf("error sending max: %v", err)
+			}
+		}
+		// call when send msg completed
+		stream.CloseSend()
+	}()
+
+	go func() {
+		// loop forever
+		for {
+			// recieve each msg from server
+			msg, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("error recieving max: %v", err)
+				break
+			}
+			// get result from msg
+			log.Printf("Receiving max: %v", msg.GetMax())
+		}
+		// close channel waitc
+		close(waitc)
+	}()
+
+	// block until it has value or close.
+	<-waitc
 
 }
