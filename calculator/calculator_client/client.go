@@ -20,7 +20,8 @@ func main() {
 	defer cc.Close()
 	c := calculatorpb.NewCalculatorServiceClient(cc)
 	// doUnary(c)
-	doStreaming(c)
+	// doStreaming(c)
+	doClientStreaming(c)
 }
 
 func doUnary(c calculatorpb.CalculatorServiceClient) {
@@ -45,7 +46,7 @@ func doStreaming(c calculatorpb.CalculatorServiceClient) {
 	fmt.Println("Created client: %f", c)
 
 	req := &calculatorpb.PrimeRequest{
-		Number: 210,
+		Number: 1203212,
 	}
 	stream, err := c.FindPrime(context.Background(), req)
 
@@ -63,5 +64,36 @@ func doStreaming(c calculatorpb.CalculatorServiceClient) {
 		}
 		log.Print(msg.GetResult())
 	}
+
+}
+
+func doClientStreaming(c calculatorpb.CalculatorServiceClient) {
+	requests := []*calculatorpb.AvgRequest{
+		{Num: 1},
+		{Num: 2},
+		{Num: 3},
+		{Num: 4},
+		{Num: 5},
+		{Num: 6},
+		{Num: 7},
+		{Num: 8},
+		{Num: 9},
+		{Num: 10},
+	}
+
+	stream, err := c.FindAvg(context.Background())
+	if err != nil {
+		log.Fatalf("error calling FindAvg : %v", err)
+	}
+
+	for _, req := range requests {
+		stream.Send(req)
+	}
+
+	res, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("error receving response from FindAvg : %v", err)
+	}
+	log.Printf("Find Avg Response : %v", res.GetResult())
 
 }

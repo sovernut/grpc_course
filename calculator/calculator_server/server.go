@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 
 	"github.com/labstack/gommon/log"
@@ -43,6 +44,29 @@ func (*server) FindPrime(req *calculatorpb.PrimeRequest, stream calculatorpb.Cal
 	return nil
 }
 
+func (*server) FindAvg(stream calculatorpb.CalculatorService_FindAvgServer) error {
+	fmt.Printf("FindAvg function was invoked with %v", stream)
+
+	var n int64
+	var sum int64
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			ans := float32(sum) / float32(n)
+			return stream.SendAndClose(&calculatorpb.AvgResponse{
+				Result: ans,
+			})
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream :%v", err)
+		}
+
+		recvNum := req.GetNum()
+		sum += recvNum
+		n++
+	}
+	return nil
+}
 func main() {
 	fmt.Println("hello")
 
